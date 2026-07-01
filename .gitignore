@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# Logs
+logs/
+
+# Generated files
+output/
+
+# Temporary Excel files
+~$*.xlsx
+
+# Windows
+Thumbs.db
+
+# macOS
+.DS_Store

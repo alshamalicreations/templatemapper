@@ -1,0 +1,11 @@
+pandas
+openpyxl
+xlsxwriter
+python-dateutil
+colorama
+tqdm
+loguru
+phonenumbers
+rapidfuzz
+unidecode
+PySide6
