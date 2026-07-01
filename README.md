@@ -58,11 +58,11 @@ IonClinic Excel Tool automatically detects patient records, treatment history, p
 
 ## Version 1.0
 
-- ✅ Derma Excel Migration
-- ✅ Patient Import
-- ✅ Appointment Import
-- ✅ Payment Import
-- ✅ Backup Export
+-  Derma Excel Migration
+-  Patient Import
+-  Appointment Import
+-  Payment Import
+-  Backup Export
 
 ---
 
