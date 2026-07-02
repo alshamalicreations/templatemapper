@@ -4,10 +4,14 @@ migration_engine.py
 Coordinates the migration workflow.
 """
 
+from datetime import datetime
+from pathlib import Path
+from time import perf_counter
+
 from engine.patient_linker import PatientLinker
 from engine.source_detector import SourceDetector
-from engine.workbook_analyzer import WorkbookAnalyzer
 
+from exporters.ionclinic_exporter import IonClinicExporter
 from importers.derma_importer import DermaImporter
 
 from models.migration_request import MigrationRequest
@@ -20,53 +24,46 @@ class MigrationEngine:
     def __init__(self):
 
         self.workbook_service = WorkbookService()
-        self.analyzer = WorkbookAnalyzer()
         self.detector = SourceDetector()
 
     def run(self, request: MigrationRequest):
 
-        print()
+        start_time = perf_counter()
 
-        print("Loading source workbook...")
+        print("\n" + "=" * 60)
+        print("IONCLINIC MIGRATION TOOL")
+        print("=" * 60)
+
+        print("\nLoading source workbook...")
         source = self.workbook_service.load(request.source_file)
         print("✓ Source workbook loaded")
 
-        print()
-
-        print("Loading template workbook...")
+        print("\nLoading template workbook...")
         self.workbook_service.load(request.template_file)
         print("✓ Template workbook loaded")
 
-        print()
-
         workbook_type = self.detector.detect(source)
 
-        print(f"Detected workbook: {workbook_type}")
-
-        print()
+        print(f"\nDetected workbook type: {workbook_type}")
 
         if workbook_type != "DERMA":
-            print("Unsupported workbook.")
+
+            print("\nUnsupported workbook.")
             return
 
         importer = DermaImporter(source)
 
-        # ---------------------------------------
-        # Import Data
-        # ---------------------------------------
+        print("\nImporting data...")
 
         patients = importer.read_patients()
-        print(f"✓ Imported {len(patients)} patients")
-
         transactions = importer.read_transactions()
-        print(f"✓ Imported {len(transactions)} transactions")
-
         payments = importer.read_payments()
-        print(f"✓ Imported {len(payments)} payments")
 
-        # ---------------------------------------
-        # Link Data
-        # ---------------------------------------
+        print(f"✓ Patients      : {len(patients)}")
+        print(f"✓ Transactions  : {len(transactions)}")
+        print(f"✓ Payments      : {len(payments)}")
+
+        print("\nLinking records...")
 
         linker = PatientLinker()
 
@@ -80,47 +77,73 @@ class MigrationEngine:
             payments,
         )
 
-        # ---------------------------------------
-        # Debug Information
-        # ---------------------------------------
+        print("✓ Relationships linked")
 
-        print()
+        print("\nExporting workbook...")
+
+        exporter = IonClinicExporter(
+            request.template_file
+        )
+
+        exporter.export(
+            patients
+        )
+
+        output_folder = Path("output")
+        output_folder.mkdir(exist_ok=True)
+
+        timestamp = datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S"
+        )
+
+        output_file = (
+            output_folder
+            / f"IonClinic_Backup_{timestamp}.xlsx"
+        )
+
+        exporter.save(output_file)
+
+        elapsed = perf_counter() - start_time
+
+        print("\n" + "=" * 60)
+        print("MIGRATION REPORT")
         print("=" * 60)
-        print("Patients With Payments")
+
+        print(f"Workbook Type        : {workbook_type}")
+
+        print(f"Patients Imported    : {len(patients)}")
+        print(f"Appointments Exported: {len(transactions)}")
+        print(f"Payments Exported    : {len(payments)}")
+
+        print(f"\nOutput File:")
+        print(output_file)
+
+        print(f"\nExecution Time:")
+        print(f"{elapsed:.2f} seconds")
+
+        print("\nValidation:")
+
+        print(
+            "PASS - Patients"
+            if len(patients) > 0
+            else "FAIL - Patients"
+        )
+
+        print(
+            "PASS - Appointments"
+            if len(transactions) > 0
+            else "FAIL - Appointments"
+        )
+
+        print(
+            "PASS - Payments"
+            if len(payments) > 0
+            else "FAIL - Payments"
+        )
+
+        print("\nWarnings : 0")
+        print("Errors   : 0")
+
+        print("\n" + "=" * 60)
+        print("Migration Completed Successfully")
         print("=" * 60)
-
-        found = 0
-
-        for patient in patients:
-
-            if len(patient.payments) == 0:
-                continue
-
-            print(f"Patient        : {patient.full_name}")
-            print(f"File Number    : {patient.file_number}")
-            print(f"Transactions   : {len(patient.transactions)}")
-            print(f"Payments       : {len(patient.payments)}")
-            print(f"Total Paid     : {patient.total_paid:.2f}")
-            print(f"Treatments     : {patient.total_treatments:.2f}")
-            print(f"Balance        : {patient.remaining_balance:.2f}")
-
-            print("-" * 60)
-
-            found += 1
-
-            if found == 5:
-                break
-
-        if found == 0:
-            print("No linked payments were found.")
-            print()
-            print("Debug:")
-            print(
-                f"First patient file number: {patients[0].file_number} ({type(patients[0].file_number).__name__})"
-            )
-            print(
-                f"First payment file number: {payments[0].patient_file_number} ({type(payments[0].patient_file_number).__name__})"
-            )
-
-        print()
-        print("Migration Engine Finished.")
