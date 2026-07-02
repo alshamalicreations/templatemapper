@@ -15,23 +15,38 @@ from writers.payment_writer import PaymentWriter
 
 class IonClinicExporter:
 
-    def __init__(self, template_path: str):
+    def __init__(
+        self,
+        template_path: str,
+        tracker=None,
+    ):
 
         self.template_path = Path(template_path)
 
         self.workbook = load_workbook(self.template_path)
 
+        self.tracker = tracker
+
     def export_patients(self, patients):
 
-        PatientWriter(self.workbook).write(patients)
+        PatientWriter(
+            self.workbook,
+            self.tracker,
+        ).write(patients)
 
     def export_appointments(self, patients):
 
-        AppointmentWriter(self.workbook).write(patients)
+        AppointmentWriter(
+            self.workbook,
+            self.tracker,
+        ).write(patients)
 
     def export_payments(self, patients):
 
-        PaymentWriter(self.workbook).write(patients)
+        PaymentWriter(
+            self.workbook,
+            self.tracker,
+        ).write(patients)
 
     def export(self, patients):
 

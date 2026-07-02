@@ -18,9 +18,16 @@ from models.payment import Payment
 
 class DermaImporter(BaseImporter):
 
-    def __init__(self, workbook):
+    def __init__(
+        self,
+        workbook,
+        tracker=None,
+    ):
 
-        super().__init__(workbook)
+        super().__init__(
+            workbook,
+            tracker,
+        )
 
         self.reader = ExcelReader(workbook)
 
@@ -45,14 +52,19 @@ class DermaImporter(BaseImporter):
 
                     full_name_en=row.get("full_name_en", ""),
 
-                    phone_number=str(row.get("phone_number", "")),
+                    phone_number=str(
+                        row.get("phone_number", "")
+                    ),
 
                     gender=row.get("gender", ""),
 
                     birth_date=row.get("birth_date"),
+
                 )
 
             )
+
+            self.advance_progress()
 
         return patients
 
@@ -71,24 +83,45 @@ class DermaImporter(BaseImporter):
 
                 Transaction(
 
-                    patient_file_number=row.get("patient_file_number"),
+                    patient_file_number=row.get(
+                        "patient_file_number"
+                    ),
 
-                    treatment_name=row.get("treatment_name", ""),
+                    treatment_name=row.get(
+                        "treatment_name",
+                        "",
+                    ),
 
-                    price=float(row.get("price") or 0),
+                    price=float(
+                        row.get("price") or 0
+                    ),
 
-                    discount_rate=float(row.get("discount_rate") or 0),
+                    discount_rate=float(
+                        row.get("discount_rate") or 0
+                    ),
 
-                    discount_value=float(row.get("discount_value") or 0),
+                    discount_value=float(
+                        row.get("discount_value") or 0
+                    ),
 
-                    payment_type=row.get("payment_type", ""),
+                    payment_type=row.get(
+                        "payment_type",
+                        "",
+                    ),
 
-                    paid_amount=float(row.get("paid_amount") or 0),
+                    paid_amount=float(
+                        row.get("paid_amount") or 0
+                    ),
 
-                    entry_date=row.get("entry_date"),
+                    entry_date=row.get(
+                        "entry_date"
+                    ),
+
                 )
 
             )
+
+            self.advance_progress()
 
         return transactions
 
@@ -107,18 +140,32 @@ class DermaImporter(BaseImporter):
 
                 Payment(
 
-                    patient_file_number=row.get("patient_file_number"),
+                    patient_file_number=row.get(
+                        "patient_file_number"
+                    ),
 
-                    amount=float(row.get("amount") or 0),
+                    amount=float(
+                        row.get("amount") or 0
+                    ),
 
-                    payment_type=row.get("payment_type", ""),
+                    payment_type=row.get(
+                        "payment_type",
+                        "",
+                    ),
 
-                    payment_date=row.get("payment_date"),
+                    payment_date=row.get(
+                        "payment_date"
+                    ),
 
-                    notes=row.get("notes", ""),
+                    notes=row.get(
+                        "notes",
+                        "",
+                    ),
 
                 )
 
             )
+
+            self.advance_progress()
 
         return payments

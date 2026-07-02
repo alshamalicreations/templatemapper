@@ -11,6 +11,16 @@ from models.payment import Payment
 
 class PatientLinker:
 
+    def __init__(self, tracker=None):
+
+        self.tracker = tracker
+
+    def advance_progress(self):
+
+        if self.tracker:
+
+            self.tracker.advance()
+
     def _normalize_key(self, value):
 
         if value is None:
@@ -53,6 +63,8 @@ class PatientLinker:
 
                 patient.transactions.append(transaction)
 
+            self.advance_progress()
+
     def link_payments(
         self,
         patients: list[Patient],
@@ -72,3 +84,5 @@ class PatientLinker:
             if patient:
 
                 patient.payments.append(payment)
+
+            self.advance_progress()

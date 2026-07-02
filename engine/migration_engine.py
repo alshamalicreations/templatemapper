@@ -9,6 +9,7 @@ from pathlib import Path
 from time import perf_counter
 
 from engine.patient_linker import PatientLinker
+from engine.progress_tracker import ProgressTracker
 from engine.source_detector import SourceDetector
 
 from exporters.ionclinic_exporter import IonClinicExporter
@@ -21,51 +22,133 @@ from services.workbook_service import WorkbookService
 
 class MigrationEngine:
 
-    def __init__(self):
+    def __init__(
+        self,
+        progress_callback=None,
+        log_callback=None,
+    ):
 
         self.workbook_service = WorkbookService()
         self.detector = SourceDetector()
+
+        self.progress_callback = progress_callback
+        self.log_callback = log_callback
+
+    def progress(self, value):
+
+        if self.progress_callback:
+            self.progress_callback(value)
+
+    def log(self, message):
+
+        if self.log_callback:
+            self.log_callback(message)
+
+        print(message)
 
     def run(self, request: MigrationRequest):
 
         start_time = perf_counter()
 
-        print("\n" + "=" * 60)
-        print("IONCLINIC MIGRATION TOOL")
-        print("=" * 60)
+        self.log("=" * 60)
+        self.log("IONCLINIC MIGRATION TOOL")
+        self.log("=" * 60)
 
-        print("\nLoading source workbook...")
-        source = self.workbook_service.load(request.source_file)
-        print("✓ Source workbook loaded")
+        self.progress(1)
 
-        print("\nLoading template workbook...")
-        self.workbook_service.load(request.template_file)
-        print("✓ Template workbook loaded")
+        self.log("Loading source workbook...")
 
-        workbook_type = self.detector.detect(source)
+        source = self.workbook_service.load(
+            request.source_file
+        )
 
-        print(f"\nDetected workbook type: {workbook_type}")
+        self.log("✓ Source workbook loaded")
+
+        self.progress(2)
+
+        self.log("Loading template workbook...")
+
+        self.workbook_service.load(
+            request.template_file
+        )
+
+        self.log("✓ Template workbook loaded")
+
+        workbook_type = self.detector.detect(
+            source
+        )
+
+        self.log(
+            f"Detected workbook type: {workbook_type}"
+        )
 
         if workbook_type != "DERMA":
 
-            print("\nUnsupported workbook.")
-            return
+            raise Exception(
+                "Unsupported workbook."
+            )
+
+        self.progress(3)
+
+        self.log("Importing patients...")
 
         importer = DermaImporter(source)
 
-        print("\nImporting data...")
-
         patients = importer.read_patients()
+
+        self.log(
+            f"✓ Imported {len(patients)} patients"
+        )
+
+        self.progress(5)
+
+        self.log("Importing transactions...")
+
         transactions = importer.read_transactions()
+
+        self.log(
+            f"✓ Imported {len(transactions)} transactions"
+        )
+
+        self.progress(8)
+
+        self.log("Importing payments...")
+
         payments = importer.read_payments()
 
-        print(f"✓ Patients      : {len(patients)}")
-        print(f"✓ Transactions  : {len(transactions)}")
-        print(f"✓ Payments      : {len(payments)}")
+        self.log(
+            f"✓ Imported {len(payments)} payments"
+        )
 
-        print("\nLinking records...")
+        total_operations = (
 
-        linker = PatientLinker()
+            len(transactions)
+
+            + len(payments)
+
+            + len(patients)
+
+            + len(transactions)
+
+            + len(payments)
+
+            + len(patients)
+
+        )
+
+        tracker = ProgressTracker(
+
+            total_operations=total_operations,
+
+            callback=self.progress,
+
+        )
+
+        self.log("Linking records...")
+
+        linker = PatientLinker(
+            tracker=tracker,
+        )
 
         linker.link_transactions(
             patients,
@@ -77,20 +160,29 @@ class MigrationEngine:
             payments,
         )
 
-        print("✓ Relationships linked")
+        self.log("✓ Relationships linked")
 
-        print("\nExporting workbook...")
+        self.log("Exporting workbook...")
 
         exporter = IonClinicExporter(
-            request.template_file
-        )
 
+            request.template_file,
+
+            tracker=tracker,
+
+        )
         exporter.export(
             patients
         )
 
-        output_folder = Path("output")
-        output_folder.mkdir(exist_ok=True)
+        output_folder = Path(
+            request.output_folder
+        )
+
+        output_folder.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
         timestamp = datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S"
@@ -101,49 +193,87 @@ class MigrationEngine:
             / f"IonClinic_Backup_{timestamp}.xlsx"
         )
 
-        exporter.save(output_file)
+        self.log("Saving workbook...")
+
+        exporter.save(
+            output_file
+        )
+
+        self.progress(100)
 
         elapsed = perf_counter() - start_time
 
-        print("\n" + "=" * 60)
-        print("MIGRATION REPORT")
-        print("=" * 60)
+        self.log("")
+        self.log("=" * 60)
+        self.log("MIGRATION REPORT")
+        self.log("=" * 60)
 
-        print(f"Workbook Type        : {workbook_type}")
+        self.log(
+            f"Workbook Type        : {workbook_type}"
+        )
 
-        print(f"Patients Imported    : {len(patients)}")
-        print(f"Appointments Exported: {len(transactions)}")
-        print(f"Payments Exported    : {len(payments)}")
+        self.log(
+            f"Patients Imported    : {len(patients)}"
+        )
 
-        print(f"\nOutput File:")
-        print(output_file)
+        self.log(
+            f"Appointments Exported: {len(transactions)}"
+        )
 
-        print(f"\nExecution Time:")
-        print(f"{elapsed:.2f} seconds")
+        self.log(
+            f"Payments Exported    : {len(payments)}"
+        )
 
-        print("\nValidation:")
+        self.log("")
 
-        print(
+        self.log("Output File:")
+
+        self.log(
+            str(output_file)
+        )
+
+        self.log("")
+
+        self.log("Execution Time:")
+
+        self.log(
+            f"{elapsed:.2f} seconds"
+        )
+
+        self.log("")
+
+        self.log("Validation:")
+
+        self.log(
             "PASS - Patients"
-            if len(patients) > 0
+            if patients
             else "FAIL - Patients"
         )
 
-        print(
+        self.log(
             "PASS - Appointments"
-            if len(transactions) > 0
+            if transactions
             else "FAIL - Appointments"
         )
 
-        print(
+        self.log(
             "PASS - Payments"
-            if len(payments) > 0
+            if payments
             else "FAIL - Payments"
         )
 
-        print("\nWarnings : 0")
-        print("Errors   : 0")
+        self.log("")
 
-        print("\n" + "=" * 60)
-        print("Migration Completed Successfully")
-        print("=" * 60)
+        self.log("Warnings : 0")
+
+        self.log("Errors   : 0")
+
+        self.log("")
+
+        self.log("=" * 60)
+
+        self.log(
+            "Migration Completed Successfully"
+        )
+
+        self.log("=" * 60)

@@ -10,10 +10,11 @@ from datetime import datetime
 
 class PatientWriter:
 
-    def __init__(self, workbook):
+    def __init__(self, workbook, tracker=None):
 
         self.workbook = workbook
         self.sheet = workbook["patients"]
+        self.tracker = tracker
 
     def write(self, patients):
 
@@ -38,6 +39,9 @@ class PatientWriter:
             self.sheet.cell(row=row, column=13).value = None
 
             row += 1
+
+            if self.tracker:
+                self.tracker.advance()
 
         self._auto_fit()
 

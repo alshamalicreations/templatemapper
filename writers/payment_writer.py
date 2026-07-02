@@ -11,10 +11,11 @@ from uuid import uuid4
 
 class PaymentWriter:
 
-    def __init__(self, workbook):
+    def __init__(self, workbook, tracker=None):
 
         self.workbook = workbook
         self.sheet = workbook["payments"]
+        self.tracker = tracker
 
     def write(self, patients):
 
@@ -56,6 +57,9 @@ class PaymentWriter:
                 self.sheet.cell(row=row, column=12).value = "completed"
 
                 row += 1
+
+                if self.tracker:
+                    self.tracker.advance()
 
         self._auto_fit()
 

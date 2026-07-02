@@ -1,23 +1,18 @@
 """
 migration_request.py
 
-Contains all information required to perform
-a migration.
+Contains the information required
+to perform a migration.
 """
 
 from dataclasses import dataclass
-from pathlib import Path
 
 
 @dataclass
 class MigrationRequest:
 
-    source_file: Path
+    source_file: str
 
-    template_file: Path
+    template_file: str
 
-    output_file: Path | None = None
-
-    validate_only: bool = False
-
-    overwrite: bool = False
+    output_folder: str

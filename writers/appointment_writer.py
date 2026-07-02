@@ -11,10 +11,11 @@ from uuid import uuid4
 
 class AppointmentWriter:
 
-    def __init__(self, workbook):
+    def __init__(self, workbook, tracker=None):
 
         self.workbook = workbook
         self.sheet = workbook["appointments"]
+        self.tracker = tracker
 
     def write(self, patients):
 
@@ -62,6 +63,9 @@ class AppointmentWriter:
 
                 row += 1
                 session_number += 1
+
+                if self.tracker:
+                    self.tracker.advance()
 
         self._auto_fit()
 

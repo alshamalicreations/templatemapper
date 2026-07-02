@@ -4,39 +4,24 @@ main.py
 Application entry point.
 """
 
-from pathlib import Path
+import sys
 
-from controllers.migration_controller import MigrationController
-from models.migration_request import MigrationRequest
+from PySide6.QtWidgets import QApplication
+
+from gui.main_window import MainWindow
 
 
 def main():
 
-    print("=" * 50)
-    print("IonClinic Excel Tool")
-    print("=" * 50)
+    app = QApplication(sys.argv)
 
-    print()
+    window = MainWindow()
 
-    source = Path(
-        input("Enter source workbook path: ").strip()
-    )
+    window.show()
 
-    print()
-
-    template = Path(
-        input("Enter template workbook path: ").strip()
-    )
-
-    request = MigrationRequest(
-        source_file=source,
-        template_file=template,
-    )
-
-    controller = MigrationController()
-
-    controller.migrate(request)
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
+
     main()
