@@ -1,13 +1,19 @@
 """
 derma_importer.py
 
-Reads patients from a Derma workbook.
+Reads data from a Derma workbook.
 """
 
-from models.patient import Patient
+from engine.excel_reader import ExcelReader
 from importers.base_importer import BaseImporter
-from engine.header_mapper import HeaderMapper
+
 from mappings.derma_patient_mapping import PATIENT_MAPPING
+from mappings.derma_transaction_mapping import TRANSACTION_MAPPING
+from mappings.derma_payment_mapping import PAYMENT_MAPPING
+
+from models.patient import Patient
+from models.transaction import Transaction
+from models.payment import Payment
 
 
 class DermaImporter(BaseImporter):
@@ -16,41 +22,103 @@ class DermaImporter(BaseImporter):
 
         super().__init__(workbook)
 
-        self.mapper = HeaderMapper(PATIENT_MAPPING)
+        self.reader = ExcelReader(workbook)
 
     def read_patients(self) -> list[Patient]:
 
-        sheet = self.workbook["Patient"]
+        rows = self.reader.read_sheet(
+            "Patient",
+            PATIENT_MAPPING,
+        )
 
-        patients: list[Patient] = []
+        patients = []
 
-        # Read the Excel header row
-        headers = [cell.value for cell in sheet[1]]
+        for row in rows:
 
-        # Build the lookup table
-        header_lookup = self.mapper.map_headers(headers)
+            patients.append(
 
-        # Read every patient row
-        for row in sheet.iter_rows(min_row=2, values_only=True):
+                Patient(
 
-            data = self.mapper.map_row(row, header_lookup)
+                    file_number=row.get("file_number"),
 
-            patient = Patient(
+                    full_name=row.get("full_name", ""),
 
-                file_number=data.get("file_number"),
+                    full_name_en=row.get("full_name_en", ""),
 
-                full_name=data.get("full_name", ""),
+                    phone_number=str(row.get("phone_number", "")),
 
-                full_name_en=data.get("full_name_en", ""),
+                    gender=row.get("gender", ""),
 
-                phone_number=str(data.get("phone_number", "")),
-
-                gender=data.get("gender", ""),
-
-                birth_date=data.get("birth_date"),
+                    birth_date=row.get("birth_date"),
+                )
 
             )
 
-            patients.append(patient)
-
         return patients
+
+    def read_transactions(self) -> list[Transaction]:
+
+        rows = self.reader.read_sheet(
+            "Patient Trans",
+            TRANSACTION_MAPPING,
+        )
+
+        transactions = []
+
+        for row in rows:
+
+            transactions.append(
+
+                Transaction(
+
+                    patient_file_number=row.get("patient_file_number"),
+
+                    treatment_name=row.get("treatment_name", ""),
+
+                    price=float(row.get("price") or 0),
+
+                    discount_rate=float(row.get("discount_rate") or 0),
+
+                    discount_value=float(row.get("discount_value") or 0),
+
+                    payment_type=row.get("payment_type", ""),
+
+                    paid_amount=float(row.get("paid_amount") or 0),
+
+                    entry_date=row.get("entry_date"),
+                )
+
+            )
+
+        return transactions
+
+    def read_payments(self) -> list[Payment]:
+
+        rows = self.reader.read_sheet(
+            "Patient Pay",
+            PAYMENT_MAPPING,
+        )
+
+        payments = []
+
+        for row in rows:
+
+            payments.append(
+
+                Payment(
+
+                    patient_file_number=row.get("patient_file_number"),
+
+                    amount=float(row.get("amount") or 0),
+
+                    payment_type=row.get("payment_type", ""),
+
+                    payment_date=row.get("payment_date"),
+
+                    notes=row.get("notes", ""),
+
+                )
+
+            )
+
+        return payments
