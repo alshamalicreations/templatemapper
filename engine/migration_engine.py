@@ -1,39 +1,70 @@
-"""
-migration_engine.py
+from engine.source_detector import SourceDetector
+from engine.workbook_analyzer import WorkbookAnalyzer
+from services.workbook_service import WorkbookService
 
-Coordinates the migration workflow.
-"""
+from models.migration_request import MigrationRequest
 
 
 class MigrationEngine:
 
     def __init__(self):
-        print("✓ Migration Engine initialized")
 
-    def run(self):
+        self.workbook_service = WorkbookService()
+        self.analyzer = WorkbookAnalyzer()
+        self.detector = SourceDetector()
 
-        print()
-
-        print("Step 1/5  Loading workbook...")
-        print("✓ Workbook loaded")
+    def run(self, request: MigrationRequest):
 
         print()
 
-        print("Step 2/5  Detecting source format...")
-        print("✓ Derma workbook detected")
+        print("Loading source workbook...")
+
+        source = self.workbook_service.load(
+            request.source_file
+        )
+
+        print("✓ Source workbook loaded")
 
         print()
 
-        print("Step 3/5  Reading patients...")
-        print("✓ 5001 patients found")
+        print("Loading template workbook...")
+
+        template = self.workbook_service.load(
+            request.template_file
+        )
+
+        print("✓ Template workbook loaded")
 
         print()
 
-        print("Step 4/5  Creating output workbook...")
-        print("✓ Output workbook ready")
+        print("Analyzing source workbook...")
+
+        report = self.analyzer.analyze(source)
+
+        print("✓ Analysis complete")
 
         print()
 
-        print("Step 5/5  Migration complete!")
+        print("Detecting workbook type...")
+
+        workbook_type = self.detector.detect(source)
+
+        print(f"✓ Detected: {workbook_type}")
 
         print()
+
+        print("=" * 60)
+        print("Workbook Summary")
+        print("=" * 60)
+
+        for sheet, info in report.items():
+
+            print()
+            print(sheet)
+            print("-" * 40)
+            print(f"Rows     : {info['rows']}")
+            print(f"Columns  : {info['columns']}")
+            print(f"Headers  : {', '.join(map(str, info['headers']))}")
+
+        print()
+        print("Migration Engine Finished.")

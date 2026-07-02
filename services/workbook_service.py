@@ -1,56 +1,37 @@
 """
 workbook_service.py
 
-Responsible for:
-- Loading Excel workbooks
-- Saving Excel workbooks
-- Listing worksheet names
-- Providing access to worksheets
-
-This service is the ONLY place in the application
-that should directly interact with openpyxl.
+Handles loading and saving Excel workbooks.
 """
 
 from pathlib import Path
+
 from openpyxl import load_workbook
 from openpyxl.workbook.workbook import Workbook
 
 
 class WorkbookService:
-    """
-    Handles loading and saving Excel workbooks.
-    """
 
     def load(self, file_path: str | Path) -> Workbook:
-        """
-        Load an Excel workbook.
 
-        Args:
-            file_path: Path to the workbook.
+        path = Path(file_path)
 
-        Returns:
-            Loaded Workbook object.
-        """
-        return load_workbook(file_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Workbook not found: {path}")
 
-    def save(self, workbook: Workbook, output_path: str | Path) -> None:
-        """
-        Save an Excel workbook.
+        if path.suffix.lower() != ".xlsx":
+            raise ValueError("Only .xlsx files are supported.")
 
-        Args:
-            workbook: Workbook object.
-            output_path: Destination path.
-        """
+        return load_workbook(path)
+
+    def save(self, workbook: Workbook, output_path: str | Path):
+
         workbook.save(output_path)
 
-    def get_sheet_names(self, workbook: Workbook) -> list[str]:
-        """
-        Return all worksheet names.
-        """
+    def get_sheet_names(self, workbook: Workbook):
+
         return workbook.sheetnames
 
-    def sheet_exists(self, workbook: Workbook, sheet_name: str) -> bool:
-        """
-        Check whether a worksheet exists.
-        """
-        return sheet_name in workbook.sheetnames
+    def get_sheet(self, workbook: Workbook, sheet_name: str):
+
+        return workbook[sheet_name]
