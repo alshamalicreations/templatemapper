@@ -6,9 +6,17 @@ Reads patients from a Derma workbook.
 
 from models.patient import Patient
 from importers.base_importer import BaseImporter
+from engine.header_mapper import HeaderMapper
+from mappings.derma_patient_mapping import PATIENT_MAPPING
 
 
 class DermaImporter(BaseImporter):
+
+    def __init__(self, workbook):
+
+        super().__init__(workbook)
+
+        self.mapper = HeaderMapper(PATIENT_MAPPING)
 
     def read_patients(self) -> list[Patient]:
 
@@ -16,16 +24,31 @@ class DermaImporter(BaseImporter):
 
         patients: list[Patient] = []
 
-        # Skip header row
+        # Read the Excel header row
+        headers = [cell.value for cell in sheet[1]]
+
+        # Build the lookup table
+        header_lookup = self.mapper.map_headers(headers)
+
+        # Read every patient row
         for row in sheet.iter_rows(min_row=2, values_only=True):
 
+            data = self.mapper.map_row(row, header_lookup)
+
             patient = Patient(
-                file_number=row[0],
-                full_name=row[1] or "",
-                full_name_en=row[2] or "",
-                phone_number=str(row[3] or ""),
-                gender=row[4] or "",
-                birth_date=row[5],
+
+                file_number=data.get("file_number"),
+
+                full_name=data.get("full_name", ""),
+
+                full_name_en=data.get("full_name_en", ""),
+
+                phone_number=str(data.get("phone_number", "")),
+
+                gender=data.get("gender", ""),
+
+                birth_date=data.get("birth_date"),
+
             )
 
             patients.append(patient)
