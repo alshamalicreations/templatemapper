@@ -51,7 +51,8 @@ class MigrationEngine:
         start_time = perf_counter()
 
         self.log("=" * 60)
-        self.log("IONCLINIC MIGRATION TOOL")
+        self.log("TEMPLATEMAPPER")
+        self.log("IONCLINIC SIMPLIFIED IMPORT EXPORT")
         self.log("=" * 60)
 
         self.progress(1)
@@ -88,51 +89,27 @@ class MigrationEngine:
                 "Unsupported workbook."
             )
 
-        self.progress(3)
+        #
+        # First pass
+        # Read everything to determine progress count.
+        #
 
-        self.log("Importing patients...")
+        self.progress(3)
 
         importer = DermaImporter(source)
 
         patients = importer.read_patients()
-
-        self.log(
-            f"✓ Imported {len(patients)} patients"
-        )
-
-        self.progress(5)
-
-        self.log("Importing transactions...")
-
         transactions = importer.read_transactions()
-
-        self.log(
-            f"✓ Imported {len(transactions)} transactions"
-        )
-
-        self.progress(8)
-
-        self.log("Importing payments...")
-
         payments = importer.read_payments()
-
-        self.log(
-            f"✓ Imported {len(payments)} payments"
-        )
 
         total_operations = (
 
-            len(transactions)
-
-            + len(payments)
-
-            + len(patients)
-
+            len(patients)
             + len(transactions)
-
             + len(payments)
-
             + len(patients)
+            + len(transactions)
+            + len(payments)
 
         )
 
@@ -144,37 +121,85 @@ class MigrationEngine:
 
         )
 
-        self.log("Linking records...")
+        #
+        # Second pass
+        # Read again while tracking progress.
+        #
+
+        importer = DermaImporter(
+
+            source,
+
+            tracker=tracker,
+
+        )
+
+        self.log("Importing patients...")
+
+        patients = importer.read_patients()
+
+        self.log(
+            f"✓ Imported {len(patients)} patients"
+        )
+
+        self.log("Importing appointments...")
+
+        transactions = importer.read_transactions()
+
+        self.log(
+            f"✓ Imported {len(transactions)} appointments"
+        )
+
+        self.log("Importing payments...")
+
+        payments = importer.read_payments()
+
+        self.log(
+            f"✓ Imported {len(payments)} payments"
+        )
+
+        self.log("Linking patient records...")
 
         linker = PatientLinker(
+
             tracker=tracker,
+
         )
 
         linker.link_transactions(
+
             patients,
+
             transactions,
+
         )
 
         linker.link_payments(
+
             patients,
+
             payments,
+
         )
 
-        self.log("✓ Relationships linked")
+        self.log("✓ Patient relationships linked")
 
-        self.log("Exporting workbook...")
+        self.log("Generating Simplified Import Template...")
 
         exporter = IonClinicExporter(
 
             request.template_file,
-            
+
             clinic_id=request.clinic_id,
 
             tracker=tracker,
 
         )
+
         exporter.export(
+
             patients
+
         )
 
         output_folder = Path(
@@ -191,8 +216,8 @@ class MigrationEngine:
         )
 
         output_file = (
-            output_folder
-            / f"IonClinic_Backup_{timestamp}.xlsx"
+                        output_folder
+            / f"TemplateMapper_Export_{timestamp}.xlsx"
         )
 
         self.log("Saving workbook...")
@@ -211,11 +236,17 @@ class MigrationEngine:
         self.log("=" * 60)
 
         self.log(
-            f"Workbook Type        : {workbook_type}"
+            f"Source Workbook Type : {workbook_type}"
         )
 
         self.log(
-            f"Patients Imported    : {len(patients)}"
+            "Export Target       : IonClinic Simplified Import Template"
+        )
+
+        self.log("")
+
+        self.log(
+            f"Patients Exported    : {len(patients)}"
         )
 
         self.log(
@@ -267,15 +298,9 @@ class MigrationEngine:
         self.log("")
 
         self.log("Warnings : 0")
-
         self.log("Errors   : 0")
 
         self.log("")
-
         self.log("=" * 60)
-
-        self.log(
-            "Migration Completed Successfully"
-        )
-
+        self.log("Migration Completed Successfully")
         self.log("=" * 60)

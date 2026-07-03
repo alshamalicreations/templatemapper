@@ -40,11 +40,15 @@ class DermaImporter(BaseImporter):
 
         patients = []
 
+        patient_id = 1
+
         for row in rows:
 
             patients.append(
 
                 Patient(
+
+                    id=patient_id,
 
                     file_number=row.get("file_number"),
 
@@ -63,6 +67,8 @@ class DermaImporter(BaseImporter):
                 )
 
             )
+
+            patient_id += 1
 
             self.advance_progress()
 

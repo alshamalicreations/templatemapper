@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QVBoxLayout,
     QFrame,
+    QCheckBox,
 )
 
 from gui.styles import STYLE
@@ -62,13 +63,13 @@ class MainWindow(QWidget):
 
         layout.setSpacing(20)
 
-        title = QLabel(
-            "TemplateMapper"
-        )
+        #
+        # Header
+        #
 
-        title.setAlignment(
-            Qt.AlignCenter
-        )
+        title = QLabel("TemplateMapper")
+
+        title.setAlignment(Qt.AlignCenter)
 
         title.setStyleSheet("""
             QLabel{
@@ -81,9 +82,7 @@ class MainWindow(QWidget):
             "Universal Excel Migration Tool"
         )
 
-        subtitle.setAlignment(
-            Qt.AlignCenter
-        )
+        subtitle.setAlignment(Qt.AlignCenter)
 
         subtitle.setStyleSheet("""
             QLabel{
@@ -93,22 +92,37 @@ class MainWindow(QWidget):
         """)
 
         layout.addWidget(title)
-
         layout.addWidget(subtitle)
 
-        line = QFrame()
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
 
-        line.setFrameShape(
-            QFrame.HLine
-        )
+        layout.addWidget(separator)
 
-        layout.addWidget(line)
+        #
+        # Input Section
+        #
 
         grid = QGridLayout()
 
         grid.setHorizontalSpacing(15)
-
         grid.setVerticalSpacing(15)
+
+        #
+        # Labels
+        #
+
+        source_label = QLabel("Source Workbook")
+        template_label = QLabel("Template Workbook")
+        output_label = QLabel("Output Folder")
+
+        source_label.setMinimumWidth(140)
+        template_label.setMinimumWidth(140)
+        output_label.setMinimumWidth(140)
+
+        #
+        # Textboxes
+        #
 
         self.source_edit = QLineEdit()
         self.source_edit.setReadOnly(True)
@@ -119,14 +133,21 @@ class MainWindow(QWidget):
         self.output_edit = QLineEdit()
         self.output_edit.setReadOnly(True)
 
-        self.clinic_id_edit = QLineEdit()
-        self.clinic_id_edit.setPlaceholderText(
-        "Enter your IonClinic Clinic ID"
-)
+        #
+        # Browse Buttons
+        #
 
         self.source_button = QPushButton("Browse")
         self.template_button = QPushButton("Browse")
         self.output_button = QPushButton("Browse")
+
+        self.source_button.setFixedWidth(110)
+        self.template_button.setFixedWidth(110)
+        self.output_button.setFixedWidth(110)
+
+        self.source_button.setMinimumHeight(36)
+        self.template_button.setMinimumHeight(36)
+        self.output_button.setMinimumHeight(36)
 
         self.source_button.clicked.connect(
             self.select_source
@@ -139,8 +160,13 @@ class MainWindow(QWidget):
         self.output_button.clicked.connect(
             self.select_output
         )
+
+        #
+        # Source
+        #
+
         grid.addWidget(
-            QLabel("Source Workbook"),
+            source_label,
             0,
             0,
         )
@@ -157,8 +183,12 @@ class MainWindow(QWidget):
             2,
         )
 
+        #
+        # Template
+        #
+
         grid.addWidget(
-            QLabel("Template Workbook"),
+            template_label,
             1,
             0,
         )
@@ -175,8 +205,12 @@ class MainWindow(QWidget):
             2,
         )
 
+        #
+        # Output
+        #
+
         grid.addWidget(
-            QLabel("Output Folder"),
+            output_label,
             2,
             0,
         )
@@ -186,29 +220,67 @@ class MainWindow(QWidget):
             2,
             1,
         )
+
         grid.addWidget(
             self.output_button,
-             2,
-             2,
+            2,
+            2,
+        )
+
+        #
+        # Optional Clinic ID
+        #
+
+        self.use_clinic_id_checkbox = QCheckBox(
+            "Specify Clinic ID"
+        )
+
+        self.use_clinic_id_checkbox.toggled.connect(
+            self.toggle_clinic_id
         )
 
         grid.addWidget(
-           QLabel("IonClinic Clinic ID"),
-           3,
-           0,
+            self.use_clinic_id_checkbox,
+            3,
+            0,
+            1,
+            3,
         )
+
+        self.clinic_id_label = QLabel(
+            "Clinic ID"
+        )
+
+        self.clinic_id_edit = QLineEdit()
+
+        self.clinic_id_edit.setPlaceholderText(
+            "Enter Clinic ID"
+        )
+
+        self.clinic_id_label.hide()
+        self.clinic_id_edit.hide()
+
         grid.addWidget(
-        self.clinic_id_edit,
-         3,
-         1,
-         1,
-         2,
-        )     
+            self.clinic_id_label,
+            4,
+            0,
+        )
+
+        grid.addWidget(
+            self.clinic_id_edit,
+            4,
+            1,
+            1,
+            2,
+        )
 
         layout.addLayout(grid)
+                #
+        # Start Button
+        #
 
         self.start_button = QPushButton(
-            "🚀 Start Migration"
+            "Start Migration"
         )
 
         self.start_button.setMinimumHeight(48)
@@ -221,13 +293,21 @@ class MainWindow(QWidget):
             self.start_button
         )
 
-        separator = QFrame()
+        #
+        # Separator
+        #
 
-        separator.setFrameShape(
+        separator2 = QFrame()
+
+        separator2.setFrameShape(
             QFrame.HLine
         )
 
-        layout.addWidget(separator)
+        layout.addWidget(separator2)
+
+        #
+        # Progress
+        #
 
         progress_title = QLabel(
             "Migration Progress"
@@ -255,7 +335,6 @@ class MainWindow(QWidget):
         stats = QGridLayout()
 
         stats.setHorizontalSpacing(50)
-
         stats.setVerticalSpacing(8)
 
         stats.addWidget(
@@ -306,15 +385,25 @@ class MainWindow(QWidget):
             2,
         )
 
-        layout.addLayout(stats)
+        layout.addLayout(
+            stats
+        )
 
-        separator2 = QFrame()
+        #
+        # Separator
+        #
 
-        separator2.setFrameShape(
+        separator3 = QFrame()
+
+        separator3.setFrameShape(
             QFrame.HLine
         )
 
-        layout.addWidget(separator2)
+        layout.addWidget(separator3)
+
+        #
+        # Log
+        #
 
         log_title = QLabel(
             "Migration Log"
@@ -345,51 +434,112 @@ class MainWindow(QWidget):
         )
 
         self.setLayout(layout)
+
+    #
+    # UI Helpers
+    #
+
+    def toggle_clinic_id(self, checked):
+
+        self.clinic_id_label.setVisible(
+            checked
+        )
+
+        self.clinic_id_edit.setVisible(
+            checked
+        )
+
+        if not checked:
+
+            self.clinic_id_edit.clear()
+
+    #
+    # Migration
+    #
+
     def start_migration(self):
 
         source = self.source_edit.text().strip()
-        template = self.template_edit.text().strip()
-        output = self.output_edit.text().strip()
-        clinic_id = self.clinic_id_edit.text().strip()
 
-        if (
-    not source
-    or not template
-    or not output
-    or not clinic_id
-):
+        template = self.template_edit.text().strip()
+
+        output = self.output_edit.text().strip()
+
+        clinic_id = None
+
+        if self.use_clinic_id_checkbox.isChecked():
+
+            clinic_id = self.clinic_id_edit.text().strip()
+
+            if not clinic_id:
+
+                QMessageBox.warning(
+                    self,
+                    "Missing Clinic ID",
+                    "Please enter a Clinic ID or uncheck 'Specify Clinic ID'.",
+                )
+
+                return
+
+        if not source or not template or not output:
 
             QMessageBox.warning(
                 self,
                 "Missing Information",
-                "Please select all required paths.",
+                "Please select the source workbook, template workbook, and output folder.",
             )
 
             return
 
         request = MigrationRequest(
+
             source_file=source,
+
             template_file=template,
+
             output_folder=output,
+
             clinic_id=clinic_id,
+
         )
 
         self.start_button.setEnabled(False)
-        self.start_button.setText("⏳ Migrating...")
+
+        self.start_button.setText(
+            "Migrating..."
+        )
 
         self.source_button.setEnabled(False)
         self.template_button.setEnabled(False)
         self.output_button.setEnabled(False)
 
+        self.use_clinic_id_checkbox.setEnabled(
+            False
+        )
+
+        self.clinic_id_edit.setEnabled(
+            False
+        )
+
         self.progress.setValue(0)
 
-        self.records_label.setText("-- / --")
-        self.status_label.setText("Starting migration...")
-        self.eta_label.setText("--:--")
+        self.records_label.setText(
+            "-- / --"
+        )
+
+        self.status_label.setText(
+            "Starting migration..."
+        )
+
+        self.eta_label.setText(
+            "--:--"
+        )
 
         self.log.clear()
 
-        self.worker = MigrationWorker(request)
+        self.worker = MigrationWorker(
+            request
+        )
 
         self.worker.progress_changed.connect(
             self.update_progress
@@ -399,7 +549,11 @@ class MainWindow(QWidget):
             self.update_log
         )
 
-        if hasattr(self.worker, "status_changed"):
+        if hasattr(
+            self.worker,
+            "status_changed",
+        ):
+
             self.worker.status_changed.connect(
                 self.status_label.setText
             )
@@ -413,6 +567,9 @@ class MainWindow(QWidget):
         )
 
         self.worker.start()
+            #
+    # Progress & Log
+    #
 
     def update_progress(self, value):
 
@@ -444,77 +601,144 @@ class MainWindow(QWidget):
             scrollbar.maximum()
         )
 
+    #
+    # Migration Results
+    #
+
     def migration_finished(self):
 
         self.progress.setValue(100)
 
-        self.status_label.setText("Completed")
+        self.status_label.setText(
+            "Completed"
+        )
 
-        self.eta_label.setText("00:00")
+        self.eta_label.setText(
+            "00:00"
+        )
 
         self.start_button.setEnabled(True)
-        self.start_button.setText("🚀 Start Migration")
+
+        self.start_button.setText(
+            "Start Migration"
+        )
 
         self.source_button.setEnabled(True)
         self.template_button.setEnabled(True)
         self.output_button.setEnabled(True)
 
+        self.use_clinic_id_checkbox.setEnabled(
+            True
+        )
+
+        if self.use_clinic_id_checkbox.isChecked():
+
+            self.clinic_id_edit.setEnabled(
+                True
+            )
+
         QMessageBox.information(
+
             self,
+
             "Migration Completed",
+
             "Migration completed successfully!",
+
         )
 
     def migration_failed(self, message):
 
         self.start_button.setEnabled(True)
-        self.start_button.setText("🚀 Start Migration")
+
+        self.start_button.setText(
+            "Start Migration"
+        )
 
         self.source_button.setEnabled(True)
         self.template_button.setEnabled(True)
         self.output_button.setEnabled(True)
 
-        self.status_label.setText("Failed")
+        self.use_clinic_id_checkbox.setEnabled(
+            True
+        )
+
+        if self.use_clinic_id_checkbox.isChecked():
+
+            self.clinic_id_edit.setEnabled(
+                True
+            )
+
+        self.status_label.setText(
+            "Failed"
+        )
 
         QMessageBox.critical(
+
             self,
+
             "Migration Failed",
+
             message,
+
         )
+
+    #
+    # Browse Dialogs
+    #
 
     def select_source(self):
 
         file, _ = QFileDialog.getOpenFileName(
+
             self,
+
             "Select Source Workbook",
+
             "",
+
             "Excel Files (*.xlsx *.xls)",
+
         )
 
         if file:
 
-            self.source_edit.setText(file)
+            self.source_edit.setText(
+                file
+            )
 
     def select_template(self):
 
         file, _ = QFileDialog.getOpenFileName(
+
             self,
+
             "Select Template Workbook",
+
             "",
+
             "Excel Files (*.xlsx)",
+
         )
 
         if file:
 
-            self.template_edit.setText(file)
+            self.template_edit.setText(
+                file
+            )
 
     def select_output(self):
 
         folder = QFileDialog.getExistingDirectory(
+
             self,
+
             "Select Output Folder",
+
         )
 
         if folder:
 
-            self.output_edit.setText(folder)
+            self.output_edit.setText(
+                folder
+            )

@@ -1,7 +1,7 @@
 """
 ionclinic_exporter.py
 
-Exports clinic data into an IonClinic Backup workbook.
+Exports clinic data into the IonClinic Simplified Import Template.
 """
 
 from pathlib import Path
@@ -28,15 +28,46 @@ class IonClinicExporter:
             self.template_path
         )
 
+        # Reserved for future exporters (Backup, etc.)
+        # Not used by the Simplified Import Template.
         self.clinic_id = clinic_id
 
         self.tracker = tracker
+
+        self._prepare_template()
+
+    def _prepare_template(self):
+        """
+        Clears all existing data rows while preserving
+        the header row of every supported worksheet.
+        """
+
+        sheets = [
+            "patients",
+            "appointments",
+            "payments",
+            "inventory_items",
+            "material_usage",
+        ]
+
+        for sheet_name in sheets:
+
+            if sheet_name not in self.workbook.sheetnames:
+                continue
+
+            sheet = self.workbook[sheet_name]
+
+            if sheet.max_row > 1:
+
+                sheet.delete_rows(
+                    idx=2,
+                    amount=sheet.max_row - 1,
+                )
 
     def export_patients(self, patients):
 
         PatientWriter(
             self.workbook,
-            self.clinic_id,
             self.tracker,
         ).write(patients)
 
@@ -44,7 +75,6 @@ class IonClinicExporter:
 
         AppointmentWriter(
             self.workbook,
-            self.clinic_id,
             self.tracker,
         ).write(patients)
 
@@ -52,7 +82,6 @@ class IonClinicExporter:
 
         PaymentWriter(
             self.workbook,
-            self.clinic_id,
             self.tracker,
         ).write(patients)
 

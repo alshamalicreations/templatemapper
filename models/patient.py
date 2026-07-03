@@ -5,7 +5,6 @@ Patient domain model.
 """
 
 from dataclasses import dataclass, field
-from uuid import uuid4
 
 from models.transaction import Transaction
 from models.payment import Payment
@@ -26,7 +25,9 @@ class Patient:
 
     birth_date: object
 
-    id: str = field(default_factory=lambda: str(uuid4()))
+    # Assigned by the importer.
+    # Default value is overwritten during import.
+    id: int = 0
 
     transactions: list[Transaction] = field(default_factory=list)
 

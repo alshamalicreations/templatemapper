@@ -2,10 +2,8 @@
 patient_writer.py
 
 Writes Patient objects into the IonClinic
-patients worksheet.
+Simplified Import Template patients worksheet.
 """
-
-from datetime import datetime
 
 
 class PatientWriter:
@@ -13,38 +11,26 @@ class PatientWriter:
     def __init__(
         self,
         workbook,
-        clinic_id,
         tracker=None,
     ):
 
         self.workbook = workbook
         self.sheet = workbook["patients"]
 
-        self.clinic_id = clinic_id
-
         self.tracker = tracker
 
     def write(self, patients):
 
-        now = datetime.now()
-
-        row = self.sheet.max_row + 1
+        row = 2
 
         for patient in patients:
 
             self.sheet.cell(row=row, column=1).value = patient.id
-            self.sheet.cell(row=row, column=2).value = self.clinic_id
-            self.sheet.cell(row=row, column=3).value = patient.full_name
-            self.sheet.cell(row=row, column=4).value = patient.phone_number
-            self.sheet.cell(row=row, column=5).value = patient.birth_date
-            self.sheet.cell(row=row, column=6).value = ""
-            self.sheet.cell(row=row, column=7).value = ""
-            self.sheet.cell(row=row, column=8).value = None
-            self.sheet.cell(row=row, column=9).value = patient.total_treatments
-            self.sheet.cell(row=row, column=10).value = patient.remaining_balance
-            self.sheet.cell(row=row, column=11).value = now
-            self.sheet.cell(row=row, column=12).value = now
-            self.sheet.cell(row=row, column=13).value = None
+            self.sheet.cell(row=row, column=2).value = patient.full_name
+            self.sheet.cell(row=row, column=3).value = patient.phone_number
+            self.sheet.cell(row=row, column=4).value = patient.birth_date
+            self.sheet.cell(row=row, column=5).value = getattr(patient, "notes", "")
+            self.sheet.cell(row=row, column=6).value = getattr(patient, "treatment_plan", "")
 
             row += 1
 
@@ -57,7 +43,7 @@ class PatientWriter:
 
         for column in self.sheet.columns:
 
-            length = 0
+            max_length = 0
 
             letter = column[0].column_letter
 
@@ -66,9 +52,12 @@ class PatientWriter:
                 if cell.value is None:
                     continue
 
-                length = max(length, len(str(cell.value)))
+                max_length = max(
+                    max_length,
+                    len(str(cell.value))
+                )
 
             self.sheet.column_dimensions[letter].width = min(
-                length + 2,
+                max_length + 2,
                 40,
             )
