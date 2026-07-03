@@ -7,9 +7,7 @@ Main GUI window.
 from datetime import datetime
 
 from PySide6.QtCore import Qt
-
 from PySide6.QtGui import QIcon
-
 from PySide6.QtWidgets import (
     QWidget,
     QLabel,
@@ -38,10 +36,10 @@ class MainWindow(QWidget):
         self.worker = None
 
         self.setWindowTitle("TemplateMapper")
-        
+
         self.setWindowIcon(
-    QIcon("assets/icons/app_icon.ico")
-)
+            QIcon("assets/icons/app_icon.ico")
+        )
 
         self.resize(980, 720)
 
@@ -113,28 +111,17 @@ class MainWindow(QWidget):
         grid.setVerticalSpacing(15)
 
         self.source_edit = QLineEdit()
-
         self.source_edit.setReadOnly(True)
 
         self.template_edit = QLineEdit()
-
         self.template_edit.setReadOnly(True)
 
         self.output_edit = QLineEdit()
-
         self.output_edit.setReadOnly(True)
 
-        self.source_button = QPushButton(
-            "Browse"
-        )
-
-        self.template_button = QPushButton(
-            "Browse"
-        )
-
-        self.output_button = QPushButton(
-            "Browse"
-        )
+        self.source_button = QPushButton("Browse")
+        self.template_button = QPushButton("Browse")
+        self.output_button = QPushButton("Browse")
 
         self.source_button.clicked.connect(
             self.select_source
@@ -147,7 +134,6 @@ class MainWindow(QWidget):
         self.output_button.clicked.connect(
             self.select_output
         )
-
         grid.addWidget(
             QLabel("Source Workbook"),
             0,
@@ -208,9 +194,7 @@ class MainWindow(QWidget):
             "🚀 Start Migration"
         )
 
-        self.start_button.setMinimumHeight(
-            48
-        )
+        self.start_button.setMinimumHeight(48)
 
         self.start_button.clicked.connect(
             self.start_migration
@@ -347,66 +331,41 @@ class MainWindow(QWidget):
     def start_migration(self):
 
         source = self.source_edit.text().strip()
-
         template = self.template_edit.text().strip()
-
         output = self.output_edit.text().strip()
 
         if not source or not template or not output:
 
             QMessageBox.warning(
-
                 self,
-
                 "Missing Information",
-
                 "Please select all required paths.",
-
             )
 
             return
 
         request = MigrationRequest(
-
             source_file=source,
-
             template_file=template,
-
             output_folder=output,
-
         )
 
         self.start_button.setEnabled(False)
-
-        self.start_button.setText(
-            "⏳ Migrating..."
-        )
+        self.start_button.setText("⏳ Migrating...")
 
         self.source_button.setEnabled(False)
-
         self.template_button.setEnabled(False)
-
         self.output_button.setEnabled(False)
 
         self.progress.setValue(0)
 
-        self.records_label.setText(
-            "-- / --"
-        )
-
-        self.status_label.setText(
-            "Starting migration..."
-        )
-
-        self.eta_label.setText(
-            "--:--"
-        )
+        self.records_label.setText("-- / --")
+        self.status_label.setText("Starting migration...")
+        self.eta_label.setText("--:--")
 
         self.log.clear()
 
-        self.worker = MigrationWorker(
-            request
-        )
+        self.worker = MigrationWorker(request)
 
         self.worker.progress_changed.connect(
             self.update_progress
@@ -416,9 +375,10 @@ class MainWindow(QWidget):
             self.update_log
         )
 
-        self.worker.status_changed.connect(
-            self.status_label.setText
-        )
+        if hasattr(self.worker, "status_changed"):
+            self.worker.status_changed.connect(
+                self.status_label.setText
+            )
 
         self.worker.migration_finished.connect(
             self.migration_finished
@@ -430,17 +390,11 @@ class MainWindow(QWidget):
 
         self.worker.start()
 
-    def update_progress(
-        self,
-        value,
-    ):
+    def update_progress(self, value):
 
         self.progress.setValue(value)
 
-    def update_log(
-        self,
-        message,
-    ):
+    def update_log(self, message):
 
         timestamp = datetime.now().strftime(
             "%H:%M:%S"
@@ -470,66 +424,40 @@ class MainWindow(QWidget):
 
         self.progress.setValue(100)
 
-        self.status_label.setText(
-            "Completed"
-        )
+        self.status_label.setText("Completed")
 
-        self.eta_label.setText(
-            "00:00"
-        )
+        self.eta_label.setText("00:00")
 
         self.start_button.setEnabled(True)
-
-        self.start_button.setText(
-            "🚀 Start Migration"
-        )
+        self.start_button.setText("🚀 Start Migration")
 
         self.source_button.setEnabled(True)
-
         self.template_button.setEnabled(True)
-
         self.output_button.setEnabled(True)
 
         QMessageBox.information(
-
             self,
-
             "Migration Completed",
-
             "Migration completed successfully!",
-
         )
 
-    def migration_failed(
-        self,
-        message,
-    ):
+    def migration_failed(self, message):
 
         self.start_button.setEnabled(True)
-
-        self.start_button.setText(
-            "🚀 Start Migration"
-        )
+        self.start_button.setText("🚀 Start Migration")
 
         self.source_button.setEnabled(True)
-
         self.template_button.setEnabled(True)
-
         self.output_button.setEnabled(True)
 
-        self.status_label.setText(
-            "Failed"
-        )
+        self.status_label.setText("Failed")
 
         QMessageBox.critical(
-
             self,
-
             "Migration Failed",
-
             message,
-
         )
+
     def select_source(self):
 
         file, _ = QFileDialog.getOpenFileName(
