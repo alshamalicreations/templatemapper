@@ -22,5 +22,10 @@ output/
 # Windows
 Thumbs.db
 
+# PyInstaller
+build/
+dist/
+*.spec
+
 # macOS
 .DS_Store
