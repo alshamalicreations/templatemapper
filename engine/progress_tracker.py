@@ -53,29 +53,41 @@ class ProgressTracker:
         )
 
     @property
-    def remaining(self):
+    def current_operations(self):
+
+        return self.current
+
+    @property
+    def total_operations(self):
+
+        return self.total
+
+    @property
+    def remaining_operations(self):
 
         return self.total - self.current
 
     @property
-    def elapsed(self):
+    def elapsed_time(self):
 
         return perf_counter() - self.start_time
 
     @property
-    def speed(self):
+    def operations_per_second(self):
 
-        if self.elapsed <= 0:
+        if self.elapsed_time <= 0:
 
             return 0
 
-        return self.current / self.elapsed
+        return self.current / self.elapsed_time
 
     @property
-    def eta(self):
+    def eta_seconds(self):
 
-        if self.speed == 0:
+        speed = self.operations_per_second
+
+        if speed <= 0:
 
             return 0
 
-        return self.remaining / self.speed
+        return self.remaining_operations / speed

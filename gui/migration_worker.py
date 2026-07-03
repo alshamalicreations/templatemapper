@@ -13,8 +13,13 @@ from models.migration_request import MigrationRequest
 class MigrationWorker(QThread):
 
     progress_changed = Signal(int)
+
     log_message = Signal(str)
+
+    status_changed = Signal(str)
+
     migration_finished = Signal()
+
     migration_failed = Signal(str)
 
     def __init__(self, request: MigrationRequest):
@@ -31,7 +36,7 @@ class MigrationWorker(QThread):
 
                 progress_callback=self.progress_changed.emit,
 
-                log_callback=self.log_message.emit,
+                log_callback=self.handle_log,
 
             )
 
@@ -42,3 +47,9 @@ class MigrationWorker(QThread):
         except Exception as error:
 
             self.migration_failed.emit(str(error))
+
+    def handle_log(self, message):
+
+        self.log_message.emit(message)
+
+        self.status_changed.emit(message)
