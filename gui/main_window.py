@@ -42,9 +42,9 @@ class MainWindow(QWidget):
             QIcon("assets/icons/app_icon.ico")
         )
 
-        self.resize(980, 720)
+        self.resize(1050, 780)
 
-        self.setMinimumSize(900, 650)
+        self.setMinimumSize(1000, 720)
 
         self.setStyleSheet(STYLE)
 
@@ -145,9 +145,9 @@ class MainWindow(QWidget):
         self.template_button.setFixedWidth(110)
         self.output_button.setFixedWidth(110)
 
-        self.source_button.setMinimumHeight(36)
-        self.template_button.setMinimumHeight(36)
-        self.output_button.setMinimumHeight(36)
+        self.source_button.setMinimumHeight(26)
+        self.template_button.setMinimumHeight(26)
+        self.output_button.setMinimumHeight(26)
 
         self.source_button.clicked.connect(
             self.select_source

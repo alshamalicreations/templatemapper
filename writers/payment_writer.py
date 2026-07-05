@@ -6,6 +6,19 @@ Simplified Import Template payments worksheet.
 """
 
 
+PAYMENT_METHOD_MAP = {
+
+    "كاش": "Cash",
+
+    "فيزا": "Visa",
+
+    "بطاقة": "Card",
+
+    "تحويل": "Transfer",
+
+}
+
+
 class PaymentWriter:
 
     def __init__(
@@ -28,23 +41,46 @@ class PaymentWriter:
 
             for payment in patient.payments:
 
+                payment_method = PAYMENT_METHOD_MAP.get(
+                    str(payment.payment_type).strip(),
+                    str(payment.payment_type).strip(),
+                )
+
                 # id
-                self.sheet.cell(row=row, column=1).value = payment_id
+                self.sheet.cell(
+                    row=row,
+                    column=1,
+                ).value = payment_id
 
                 # patient_id
-                self.sheet.cell(row=row, column=2).value = patient.id
+                self.sheet.cell(
+                    row=row,
+                    column=2,
+                ).value = patient.id
 
                 # amount
-                self.sheet.cell(row=row, column=3).value = payment.amount
+                self.sheet.cell(
+                    row=row,
+                    column=3,
+                ).value = payment.amount
 
                 # discount
-                self.sheet.cell(row=row, column=4).value = 0
+                self.sheet.cell(
+                    row=row,
+                    column=4,
+                ).value = payment.discount
 
                 # payment_method
-                self.sheet.cell(row=row, column=5).value = payment.payment_type
+                self.sheet.cell(
+                    row=row,
+                    column=5,
+                ).value = payment_method
 
                 # payment_date
-                self.sheet.cell(row=row, column=6).value = payment.payment_date
+                self.sheet.cell(
+                    row=row,
+                    column=6,
+                ).value = payment.payment_date
 
                 row += 1
                 payment_id += 1
@@ -72,7 +108,9 @@ class PaymentWriter:
                     len(str(cell.value))
                 )
 
-            self.sheet.column_dimensions[letter].width = min(
+            self.sheet.column_dimensions[
+                letter
+            ].width = min(
                 max_length + 2,
                 40,
             )

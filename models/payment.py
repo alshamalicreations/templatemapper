@@ -15,8 +15,10 @@ class Payment:
 
     amount: float
 
-    payment_type: str
+    discount: float = 0.0
 
-    payment_date: datetime | None
+    payment_type: str = ""
 
-    notes: str
+    payment_date: datetime | None = None
+
+    notes: str = ""

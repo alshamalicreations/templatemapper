@@ -17,6 +17,7 @@ from importers.derma_importer import DermaImporter
 
 from models.migration_request import MigrationRequest
 
+from services.payment_generator import PaymentGenerator
 from services.workbook_service import WorkbookService
 
 
@@ -91,16 +92,27 @@ class MigrationEngine:
 
         #
         # First pass
-        # Read everything to determine progress count.
         #
 
         self.progress(3)
 
         importer = DermaImporter(source)
 
+        payment_generator = PaymentGenerator()
+
         patients = importer.read_patients()
+
         transactions = importer.read_transactions()
+
         payments = importer.read_payments()
+
+        payments = payment_generator.generate(
+
+            payments=payments,
+
+            transactions=transactions,
+
+        )
 
         total_operations = (
 
@@ -123,7 +135,6 @@ class MigrationEngine:
 
         #
         # Second pass
-        # Read again while tracking progress.
         #
 
         importer = DermaImporter(
@@ -154,10 +165,17 @@ class MigrationEngine:
 
         payments = importer.read_payments()
 
+        payments = payment_generator.generate(
+
+            payments=payments,
+
+            transactions=transactions,
+
+        )
+
         self.log(
             f"✓ Imported {len(payments)} payments"
         )
-
         self.log("Linking patient records...")
 
         linker = PatientLinker(
@@ -216,7 +234,7 @@ class MigrationEngine:
         )
 
         output_file = (
-                        output_folder
+            output_folder
             / f"TemplateMapper_Export_{timestamp}.xlsx"
         )
 
